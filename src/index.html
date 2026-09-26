@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Windows Pet Prototype</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="workspace">
+      <section class="pet-stage" aria-label="桌宠预览区域">
+        <div class="stage-grid"></div>
+        <div class="pet-shadow" id="petShadow"></div>
+        <button class="pet-shell" id="petShell" type="button" aria-label="拖动桌宠">
+          <span class="pet-body chibi-character" aria-hidden="true">
+            <span class="pet-art-rig">
+              <img class="pet-art" id="petArt" src="./assets/character-v2.png" alt="" />
+            </span>
+            <span class="pet-badge" id="petBadge">待机</span>
+          </span>
+          <span class="speech" id="speechBubble">欢迎回来，玩家。今天也要认真推进主线哦。</span>
+        </button>
+      </section>
+    </main>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

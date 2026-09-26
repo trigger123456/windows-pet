@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>桌宠设置</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-app-shell="settings">
+    <main class="settings-root">
+      <header class="settings-header">
+        <p class="eyebrow">Windows Pet</p>
+        <h1>陪伴，简单一点。</h1>
+        <p class="settings-note">点击聊天 · 拖动搬家 · 右键猜拳、整理窗口</p>
+      </header>
+      <section class="settings-section">
+        <h2>桌面显示</h2>
+        <label class="range-row wide-output"><span>大小</span><input id="scale" type="range" min="0.65" max="1.6" step="0.05" /><output id="scaleOutput"></output></label>
+        <label class="toggle-row"><input id="alwaysOnTop" type="checkbox" /><span>始终置顶</span></label>
+        <label class="toggle-row"><input id="openAtLogin" type="checkbox" /><span>开机启动</span></label>
+      </section>
+      <section class="settings-section">
+        <h2>陪伴方式</h2>
+        <label class="toggle-row"><input id="wander" type="checkbox" /><span>自由活动</span></label>
+        <label class="toggle-row"><input id="microActions" type="checkbox" /><span>偶尔主动说话</span></label>
+        <label class="range-row wide-output"><span>专注</span><input id="pomodoroMinutes" type="range" min="5" max="120" step="5" /><output id="pomodoroMinutesOutput"></output></label>
+        <p class="settings-note">从右键菜单开始或结束专注。应用快捷入口和窗口助手也在那里。</p>
+      </section>
+      <details class="settings-section">
+        <summary>更多偏好</summary>
+        <label class="range-row wide-output"><span>透明度</span><input id="opacity" type="range" min="0.35" max="1" step="0.05" /><output id="opacityOutput"></output></label>
+        <label class="range-row wide-output"><span>提醒</span><input id="reminderMinutes" type="range" min="5" max="60" step="5" /><output id="reminderMinutesOutput"></output></label>
+        <label class="range-row wide-output"><span>话频</span><input id="idleActionSeconds" type="range" min="6" max="45" step="1" /><output id="idleActionSecondsOutput"></output></label>
+        <label class="toggle-row"><input id="transparentAreaPassthrough" type="checkbox" /><span>空白区域不挡鼠标</span></label>
+        <label class="toggle-row"><input id="bubbles" type="checkbox" /><span>显示对话气泡</span></label>
+        <label class="toggle-row"><input id="sass" type="checkbox" /><span>轻微吐槽</span></label>
+      </details>
+      <p class="settings-note" id="settingsStatus" role="status">设置会自动保存。</p>
+    </main>
+    <script src="./settings.js" type="module"></script>
+  </body>
+</html>

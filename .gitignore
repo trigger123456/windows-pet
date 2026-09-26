@@ -1,0 +1,9 @@
+node_modules/
+release/
+build/
+.idea/
+.agents/
+.claude/
+*.log
+Desktop.ini
+Thumbs.db

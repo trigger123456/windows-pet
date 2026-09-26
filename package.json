@@ -1,0 +1,47 @@
+{
+  "name": "windows-pet",
+  "version": "0.1.0",
+  "description": "A static-portrait Windows desktop pet prototype built with Electron.",
+  "author": "Windows Pet contributors",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "node scripts/dev-server.mjs",
+    "desktop": "electron .",
+    "check": "node --check src/app.js && node --check src/settings.js && node --check scripts/dev-server.mjs && node --check electron/main.cjs && node --check electron/preload.cjs",
+    "test": "npm run check",
+    "test:desktop": "electron scripts/desktop-smoke.cjs",
+    "build": "npm run pack",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win nsis portable"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "local.windows-pet",
+    "productName": "Windows Pet",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [{ "from": "electron/window-control.ps1", "to": "window-control.ps1" }],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
