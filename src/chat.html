@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'" />
+  <title>和桌宠聊天</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-app-shell="chat">
+  <main class="chat-root">
+    <header class="chat-header"><div><h1>我在，慢慢说。</h1><p id="chatStatus" role="status">正在连接设置…</p></div><button id="chatSettings" class="event-button" type="button">设置</button></header>
+    <div class="chat-messages" id="messages" role="log" aria-label="对话记录" aria-live="polite"><p class="chat-hint">消息仅发送到你配置的服务。对话记录只在本次窗口会话中保留。</p></div>
+    <form id="chatForm" class="chat-composer">
+      <label class="sr-only" for="chatInput">想对桌宠说的话</label>
+      <textarea id="chatInput" placeholder="今天想聊点什么？" maxlength="2000" rows="3"></textarea>
+      <div class="chat-actions"><button id="clearChat" class="event-button" type="button">新对话</button><span class="chat-shortcut">Enter 发送 · Shift+Enter 换行</span><button id="sendChat" class="event-button" type="submit">发送</button><button id="stopChat" class="event-button" type="button" hidden>停止</button></div>
+    </form>
+  </main>
+  <script src="./chat.js" type="module"></script>
+</body>
+</html>

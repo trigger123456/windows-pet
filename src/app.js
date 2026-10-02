@@ -6,6 +6,7 @@ const speechBubble = document.querySelector("#speechBubble");
 
 const isDesktopShell = document.body.dataset.appShell === "desktop";
 const desktopPet = window.desktopPet;
+let aiEnabled = false;
 const characterImage = "./assets/character-v2.png";
 
 const defaultConfig = {
@@ -803,6 +804,7 @@ function bindPetPointerEvents() {
 
   petShell.addEventListener("click", (event) => {
     if (!wasDragged) {
+      if (aiEnabled && desktopPet) { desktopPet.openAIChat(); return; }
       const now = performance.now();
       clickStreak = now - lastClickAt < 720 ? clickStreak + 1 : 1;
       lastClickAt = now;
@@ -824,6 +826,7 @@ function bindPetPointerEvents() {
 
   petShell.addEventListener("dblclick", (event) => {
     event.preventDefault();
+    if (aiEnabled) return;
     clickStreak = 0;
     setState("celebrate", { text: "连击成功。给你一个小小的胜利演出。" });
     spawnReactionSparks(event.offsetX, event.offsetY, 6);
@@ -849,11 +852,16 @@ function bindDesktopEvents() {
   });
 
   desktopPet.onSettingsChanged?.((settings) => {
+    aiEnabled = Boolean(settings.aiEnabled);
     desktopTransparentAreaPassthrough = Boolean(settings.transparentAreaPassthrough);
     updateConfig(settings, { fromDesktopSettings: true });
   });
 
   desktopPet.onCommand((command) => {
+    if (command?.type === "ai-reply") {
+      setState("talk", { text: command.text, duration: 10000 });
+      scheduleNextAmbientLine();
+    }
     if (command?.type === "interaction") playInteraction(command.action);
     if (command?.type === "state") {
       setState(command.state);
@@ -873,6 +881,7 @@ function bindDesktopEvents() {
 
 async function init() {
   behavior.config = await loadInitialConfig();
+  if (desktopPet?.getAIConfig) aiEnabled = (await desktopPet.getAIConfig()).enabled;
   if (petArt) {
     petArt.src = characterImage;
   }

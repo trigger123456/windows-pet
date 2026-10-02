@@ -2,6 +2,19 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("desktopPet", {
   isElectron: true,
+  getAIConfig: () => ipcRenderer.invoke("ai:get"),
+  setAIPersona: (value) => ipcRenderer.invoke("ai:persona", value),
+  configureAI: (patch) => ipcRenderer.invoke("ai:configure", patch),
+  openAIChat: () => ipcRenderer.send("ai:open"),
+  openSettings: () => ipcRenderer.send("settings:open"),
+  sendAIMessage: (text) => ipcRenderer.invoke("ai:send", text),
+  cancelAIMessage: () => ipcRenderer.send("ai:cancel"),
+  clearAIChat: () => ipcRenderer.invoke("ai:clear"),
+  onAIChanged: (callback) => {
+    const listener = (_event, config) => callback(config);
+    ipcRenderer.on("ai:changed", listener);
+    return () => ipcRenderer.removeListener("ai:changed", listener);
+  },
   openContextMenu: () => ipcRenderer.send("pet:context-menu"),
   getSettings: () => ipcRenderer.invoke("settings:get"),
   updateSettings: (patch) => ipcRenderer.invoke("settings:update", patch),

@@ -26,6 +26,29 @@
         <label class="range-row wide-output"><span>专注</span><input id="pomodoroMinutes" type="range" min="5" max="120" step="5" /><output id="pomodoroMinutesOutput"></output></label>
         <p class="settings-note">从右键菜单开始或结束专注。应用快捷入口和窗口助手也在那里。</p>
       </section>
+      <section class="settings-section" id="aiSection">
+        <h2>AI 对话</h2>
+        <label class="toggle-row"><input id="aiEnabled" type="checkbox" /><span>启用 AI 对话</span></label>
+        <p class="settings-note">开启后点击角色即可聊天。关闭后使用本地随机台词。只有主动发送消息时才调用接口。</p>
+        <form id="personaForm">
+          <label class="text-field">人格设定<textarea id="aiPersona" rows="8" required aria-describedby="personaCount" placeholder="例如：叫我队长，语气温柔，回答简短，偶尔用游戏术语。"></textarea></label>
+          <p class="settings-note" id="personaCount">0 / 20000 字符</p>
+          <p class="settings-note">可设置称呼、性格、语气和回复长度。保存后开始新对话；不会修改接口或密钥。仅影响 AI 回复。</p>
+          <div class="chat-actions"><button class="event-button" type="submit">保存人格</button><button class="event-button" id="resetPersona" type="button">恢复默认人格</button></div>
+          <p class="settings-note" id="personaStatus" role="status"></p>
+        </form>
+        <details id="aiDetails">
+          <summary>接口配置</summary>
+          <form id="aiConfigForm">
+            <label class="text-field">API 地址<input id="aiBaseUrl" type="url" placeholder="https://服务地址/v1" autocomplete="off" maxlength="2048" /></label>
+            <label class="text-field">模型名称<input id="aiModel" type="text" placeholder="填写服务商提供的模型 ID" maxlength="200" autocomplete="off" /></label>
+            <label class="text-field">API Key<input id="aiKey" type="password" placeholder="本机无鉴权服务可留空" maxlength="8192" autocomplete="off" /></label>
+            <p class="settings-note" id="aiKeyStatus">密钥使用系统加密后保存在本机。</p>
+            <div class="chat-actions"><button class="event-button" type="submit">保存接口</button><button class="event-button" id="clearAIKey" type="button">清除密钥</button></div>
+          </form>
+        </details>
+        <p class="settings-note" id="aiStatus" role="status">AI 默认关闭。</p>
+      </section>
       <details class="settings-section">
         <summary>更多偏好</summary>
         <label class="range-row wide-output"><span>透明度</span><input id="opacity" type="range" min="0.35" max="1" step="0.05" /><output id="opacityOutput"></output></label>

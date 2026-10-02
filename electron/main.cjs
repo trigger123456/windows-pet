@@ -1,7 +1,9 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { execFile } = require("node:child_process");
-const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen, dialog } = require("electron");
+const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen, dialog, safeStorage } = require("electron");
+const { pathToFileURL } = require("node:url");
+const { createAIService } = require("./ai-service.cjs");
 
 const baseWindowSize = {
   width: 410,
@@ -28,6 +30,8 @@ const defaultSettings = {
 
 let petWindow = null;
 let settingsWindow = null;
+let chatWindow = null;
+let ai = null;
 let tray = null;
 let settings = { ...defaultSettings };
 let pomodoroTimer = 0;
@@ -105,8 +109,34 @@ function saveSettings() {
 }
 
 function broadcastSettings() {
-  petWindow?.webContents.send("settings:changed", settings);
-  settingsWindow?.webContents.send("settings:changed", settings);
+  petWindow?.webContents.send("settings:changed", publicSettings());
+  settingsWindow?.webContents.send("settings:changed", publicSettings());
+}
+
+function publicSettings() { return { ...settings, aiEnabled: ai?.getConfig().enabled ?? false }; }
+
+function broadcastAI() {
+  for (const win of [petWindow, settingsWindow, chatWindow]) win?.webContents.send("ai:changed", ai.getConfig());
+  broadcastSettings();
+}
+
+function openChatWindow() {
+  if (!ai?.getConfig().enabled) { openSettingsWindow(); return; }
+  if (chatWindow) { chatWindow.show(); chatWindow.focus(); return; }
+  chatWindow = new BrowserWindow({
+    width: 420, height: 560, minWidth: 360, minHeight: 430,
+    title: "和桌宠聊天", autoHideMenuBar: true, show: false,
+    webPreferences: { preload: path.join(__dirname, "preload.cjs"), contextIsolation: true, nodeIntegration: false }
+  });
+  chatWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  chatWindow.webContents.on("will-navigate", event => event.preventDefault());
+  chatWindow.loadFile(getAssetPath("src", "chat.html"));
+  chatWindow.once("ready-to-show", () => chatWindow?.show());
+  chatWindow.on("closed", () => { ai.clear(); chatWindow = null; });
+}
+
+function trustedAIEvent(event, pages) {
+  return event.senderFrame === event.sender.mainFrame && pages.some(page => event.sender.getURL() === pathToFileURL(getAssetPath("src", page)).href);
 }
 
 function getScaledWindowSize(scale = settings.scale) {
@@ -354,7 +384,7 @@ async function showInteractionMenu() {
 
 function interactionMenu(windows) {
   return [
-    { label: "聊两句", click: () => sendInteraction("chat") },
+    { label: ai?.getConfig().enabled ? "AI 对话…" : "聊两句", click: () => ai?.getConfig().enabled ? openChatWindow() : sendInteraction("chat") },
     { label: "猜拳", submenu: ["石头", "剪刀", "布"].map((label, index) => ({ label, click: () => sendInteraction("rps:" + index) })) },
     { label: pomodoroTimer ? "结束专注" : "专注 " + settings.pomodoroMinutes + " 分钟", click: () => sendPetWorkflow(pomodoroTimer ? stopPomodoro() : startPomodoro()) },
     { label: "窗口助手", submenu: windows?.length ? windows.map(target => ({
@@ -485,14 +515,46 @@ ipcMain.on("pet:context-menu", (event) => {
   if (event.sender === petWindow?.webContents) showInteractionMenu();
 });
 
-ipcMain.handle("settings:get", () => settings);
+ipcMain.handle("settings:get", () => publicSettings());
+
+ipcMain.handle("ai:get", () => ai.getConfig());
+ipcMain.handle("ai:persona", (event, value) => {
+  if (!trustedAIEvent(event, ["settings.html"])) return { ok: false, error: "请从设置页修改人格。" };
+  try {
+    const config = ai.setPersona(value);
+    broadcastAI();
+    return { ok: true, config };
+  } catch (error) {
+    return { ok: false, error: error.message.startsWith("人格设定") ? error.message : "人格保存失败，请重试。" };
+  }
+});
+ipcMain.handle("ai:configure", (event, patch) => {
+  if (!trustedAIEvent(event, ["settings.html"])) return { ok: false, error: "请从设置页配置 AI。" };
+  try {
+    const config = ai.configure(patch);
+    broadcastAI();
+    return { ok: true, config };
+  } catch (error) {
+    return { ok: false, error: /^(请|API|系统密钥)/.test(error.message) ? error.message : "配置保存失败，请重试。" };
+  }
+});
+ipcMain.on("ai:open", (event) => { if (trustedAIEvent(event, ["desktop.html", "settings.html"])) openChatWindow(); });
+ipcMain.on("settings:open", (event) => { if (trustedAIEvent(event, ["chat.html"])) openSettingsWindow(); });
+ipcMain.handle("ai:send", async (event, text) => {
+  if (event.sender !== chatWindow?.webContents || !trustedAIEvent(event, ["chat.html"])) return { ok: false, error: "请从对话窗口发送消息。" };
+  const result = await ai.send(text);
+  if (result.ok) petWindow?.webContents.send("pet:command", { type: "ai-reply", text: result.text.slice(0, 60) });
+  return result;
+});
+ipcMain.on("ai:cancel", (event) => { if (event.sender === chatWindow?.webContents) ai.cancel(); });
+ipcMain.handle("ai:clear", (event) => { if (event.sender === chatWindow?.webContents) ai.clear(); });
 
 ipcMain.handle("settings:update", (_event, patch) => {
   if (!patch || typeof patch !== "object") {
     return settings;
   }
 
-  const { linkedApps, windowBounds, ...preferences } = patch;
+  const { linkedApps, windowBounds, aiEnabled, ...preferences } = patch;
   return updateSettings(preferences);
 });
 
@@ -548,6 +610,7 @@ ipcMain.on("pet:set-mouse-passthrough", (_event, enabled) => {
 app.whenReady().then(() => {
   app.setAppUserModelId("local.windows-pet");
   loadSettings();
+  ai = createAIService({ directory: app.getPath("userData"), safeStorage });
   applyLoginItemSettings();
   createPetWindow();
   createTray();
