@@ -8,6 +8,20 @@ const isDesktopShell = document.body.dataset.appShell === "desktop";
 const desktopPet = window.desktopPet;
 let aiEnabled = false;
 const characterImage = "./assets/character-v2.png";
+const actionImages = {
+  shy: "./assets/character-shy.png",
+  run: "./assets/character-run.png",
+  jump: "./assets/character-jump.png",
+  celebrate: "./assets/character-jump.png",
+  akimbo: "./assets/character-akimbo.png",
+  remind: "./assets/character-akimbo.png"
+};
+// Decode ahead of interaction so switching poses does not flash an empty image.
+const posePreloads = [...new Set(Object.values(actionImages))].map(src => {
+  const image = new Image();
+  image.src = src;
+  return image;
+});
 
 const defaultConfig = {
   energy: 58,
@@ -20,6 +34,10 @@ const defaultConfig = {
 };
 
 const stateMachine = {
+  shy: { label: "娇羞", type: "interaction", duration: 4200, next: "idle" },
+  run: { label: "奔跑", type: "interaction", duration: 3600, next: "idle" },
+  jump: { label: "跳跃", type: "interaction", duration: 2200, next: "idle" },
+  akimbo: { label: "叉腰", type: "interaction", duration: 4200, next: "idle" },
   idle: { label: "待机", type: "base", sticky: true },
   walk: { label: "散步", type: "base", sticky: true },
   focus: { label: "专注", type: "base", sticky: true },
@@ -39,6 +57,10 @@ const stateMachine = {
 };
 
 const linePools = {
+  shy: ["突然这样看着我……有点不好意思。", "嗯……你在就好。"],
+  run: ["小跑两步，精神一点。", "桌面巡逻，加速中。"],
+  jump: ["跳一下，给今天加点活力。", "好，状态回来了。"],
+  akimbo: ["哼哼，这点小事交给我。", "准备好了，下一步做什么？"],
   idle: [
     "我在。今日主线别忘了推进。",
     "待机中。你忙你的，我看着进度条。",
@@ -329,7 +351,9 @@ function applyState(action) {
   document.body.dataset.state = action.state;
 
   if (petArt) {
-    petArt.src = characterImage;
+    const image = actionImages[action.state] || characterImage;
+    petArt.src = image;
+    petShell.style.setProperty("--character-image", `url("${image}")`);
   }
   if (speechBubble) {
     speechBubble.classList.remove("pop");
@@ -536,7 +560,7 @@ function spawnReactionSparks(originX = shellWidth * 0.5, originY = shellHeight *
 }
 
 function isMotionPaused() {
-  return ["sleep", "focus", "think", "remind", "fail", "drag", "celebrate", "drop", "edge_peek"].includes(
+  return ["sleep", "focus", "think", "remind", "fail", "drag", "celebrate", "drop", "edge_peek", "run", "jump", "akimbo", "shy"].includes(
     behavior.state
   );
 }

@@ -44,6 +44,18 @@ app.whenReady().then(async () => {
     await delay(800);
     assert.match(await pet.webContents.executeJavaScript('document.querySelector("#speechBubble").textContent'), /^我出/);
     fs.writeFileSync(path.join(output, 'pet.png'), (await pet.webContents.capturePage()).toPNG());
+    for (const [state, asset] of [['run', 'run'], ['jump', 'jump'], ['akimbo', 'akimbo'], ['shy', 'shy'], ['celebrate', 'jump'], ['idle', 'v2']]) {
+      pet.webContents.send('pet:command', { type: 'state', state });
+      await delay(350);
+      const pose = await pet.webContents.executeJavaScript(`(() => {
+        const image = document.querySelector('#petArt');
+        return { state: document.body.dataset.state, src: image.getAttribute('src'), loaded: image.complete && image.naturalWidth > 0 };
+      })()`);
+      assert.equal(pose.state, state);
+      assert.equal(pose.src, `./assets/character-${asset}.png`);
+      assert(pose.loaded, `${state} pose loaded`);
+      if (['run', 'jump', 'akimbo', 'shy'].includes(state)) fs.writeFileSync(path.join(output, `pose-${state}.png`), (await pet.webContents.capturePage()).toPNG());
+    }
     await pet.webContents.executeJavaScript('window.desktopPet.openAIChat()');
     await delay(600);
     const settings = BrowserWindow.getAllWindows().find(win => win.webContents.getURL().endsWith('settings.html'));

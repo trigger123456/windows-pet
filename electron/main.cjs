@@ -386,6 +386,9 @@ function interactionMenu(windows) {
   return [
     { label: ai?.getConfig().enabled ? "AI 对话…" : "聊两句", click: () => ai?.getConfig().enabled ? openChatWindow() : sendInteraction("chat") },
     { label: "猜拳", submenu: ["石头", "剪刀", "布"].map((label, index) => ({ label, click: () => sendInteraction("rps:" + index) })) },
+    { label: "小动作", submenu: [["奔跑", "run"], ["跳跃", "jump"], ["叉腰", "akimbo"], ["娇羞", "shy"]].map(([label, state]) => ({
+      label, click: () => petWindow?.webContents.send("pet:command", { type: "state", state })
+    })) },
     { label: pomodoroTimer ? "结束专注" : "专注 " + settings.pomodoroMinutes + " 分钟", click: () => sendPetWorkflow(pomodoroTimer ? stopPomodoro() : startPomodoro()) },
     { label: "窗口助手", submenu: windows?.length ? windows.map(target => ({
       label: target.title.slice(0, 70).replace(/&/g, "&&"),
